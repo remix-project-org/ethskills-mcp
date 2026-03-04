@@ -179,6 +179,7 @@ function createMcpServer(): Server {
 
       if (!skill) {
         const validIds = allSkills.map((s) => s.id).join(", ");
+        console.warn(`Requested unknown skill id: '${skill_id}'. Valid ids are: ${validIds}`);
         return {
           content: [{ type: "text" as const, text: `Unknown skill id: '${skill_id}'. Valid ids are: ${validIds}` }],
           isError: true,
@@ -187,17 +188,18 @@ function createMcpServer(): Server {
 
       const content = await skillManager.getSkillContent(skill_id);
       if (!content) {
+        console.error(`Failed to load content for skill id: '${skill_id}'`);
         return {
           content: [{ type: "text" as const, text: `Skill '${skill_id}' content is unavailable (failed to load).` }],
           isError: true,
         };
       }
-
+      console.log(`Successfully loaded content for skill id: '${skill_id}'`, content);
       return {
         content: [{ type: "text" as const, text: content }],
       };
     }
-
+    console.warn(`Received request for unknown tool: '${name}'`);
     return {
       content: [{ type: "text" as const, text: `Unknown tool: '${name}'` }],
       isError: true,

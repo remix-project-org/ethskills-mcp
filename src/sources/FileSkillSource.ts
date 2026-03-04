@@ -82,10 +82,13 @@ export class FileSkillSource implements SkillSource {
           const skillId = this.createSkillId(relativePath);
           const categoryPath = relative(this.skillsDirectory, dirPath);
           
+          // Extract name and description from file content
+          const { name, description } = this.extractMetadataFromFile(fullPath);
+          
           skills.push({
             id: skillId,
-            name: this.formatSkillName(basename(entry, '.md')),
-            description: `Local skill: ${categoryPath ? `${categoryPath}/` : ''}${basename(entry, '.md')}`,
+            name: name || this.formatSkillName(basename(entry, '.md')),
+            description: description,
             filePath: fullPath
           } as any);
         }
@@ -110,5 +113,96 @@ export class FileSkillSource implements SkillSource {
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  }
+
+  private extractMetadataFromFile(filePath: string): { name: string | null, description: string } {
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      const lines = content.split('\n');
+      
+      // Parse YAML frontmatter
+      const frontmatter = this.parseYamlFrontmatter(content);
+      let name: string | null = null;
+      let description: string;
+      
+      // Get description from frontmatter if available
+      if (frontmatter && frontmatter.description) {
+        description = frontmatter.description;
+      } else {
+        description = 'No description available';
+      }
+      
+      // Find start index after frontmatter
+      let startIndex = 0;
+      if (lines[0] === '---') {
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i] === '---') {
+            startIndex = i + 1;
+            break;
+          }
+        }
+      }
+      
+      // Extract name from frontmatter or markdown title
+      if (frontmatter && frontmatter.name) {
+        name = frontmatter.name;
+      } else {
+        // Look for the first markdown header for the title
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('#')) {
+            name = line.replace(/^#+\s*/, '');
+            break;
+          }
+        }
+      }
+      
+      // If no description from frontmatter, try to extract from content
+      if (!frontmatter?.description) {
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line && !line.startsWith('#') && !line.startsWith('**') && !line.startsWith('*')) {
+            description = line;
+            break;
+          }
+        }
+      }
+      
+      return { name, description };
+    } catch (err) {
+      console.warn(`Failed to extract metadata from ${filePath}: ${(err as Error).message}`);
+      return { 
+        name: null, 
+        description: `Local skill: ${basename(filePath, '.md')}`
+      };
+    }
+  }
+
+  private parseYamlFrontmatter(content: string): Record<string, string> | null {
+    const lines = content.split('\n');
+    if (lines[0] !== '---') return null;
+    
+    let endIndex = -1;
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i] === '---') {
+        endIndex = i;
+        break;
+      }
+    }
+    
+    if (endIndex === -1) return null;
+    
+    const frontmatter: Record<string, string> = {};
+    for (let i = 1; i < endIndex; i++) {
+      const line = lines[i];
+      const colonIndex = line.indexOf(':');
+      if (colonIndex !== -1) {
+        const key = line.substring(0, colonIndex).trim();
+        const value = line.substring(colonIndex + 1).trim();
+        frontmatter[key] = value;
+      }
+    }
+    
+    return frontmatter;
   }
 }

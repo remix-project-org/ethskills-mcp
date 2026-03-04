@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dump-skills": "node scripts/dump-skills.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
