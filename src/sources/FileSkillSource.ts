@@ -1,6 +1,6 @@
 import { SkillSource, SkillMetadata } from "../types";
-import { readFileSync, readdirSync, existsSync } from "fs";
-import { join, extname, basename } from "path";
+import { readFileSync, readdirSync, existsSync, statSync } from "fs";
+import { join, extname, basename, relative } from "path";
 
 export class FileSkillSource implements SkillSource {
   private skills: SkillMetadata[] = [];
@@ -23,8 +23,9 @@ export class FileSkillSource implements SkillSource {
       return this.skillContentCache.get(skillId)!;
     }
 
-    const skillFile = join(this.skillsDirectory, `${skillId}.md`);
-    if (!existsSync(skillFile)) {
+    // Find the skill file by searching through nested directories
+    const skillFile = this.findSkillFile(skillId);
+    if (!skillFile || !existsSync(skillFile)) {
       return null;
     }
 
@@ -39,6 +40,11 @@ export class FileSkillSource implements SkillSource {
     }
   }
 
+  private findSkillFile(skillId: string): string | null {
+    const skill = this.skills.find(s => s.id === skillId);
+    return skill ? (skill as any).filePath : null;
+  }
+
   isSkillAvailable(skillId: string): boolean {
     return this.skills.some(skill => skill.id === skillId);
   }
@@ -50,22 +56,53 @@ export class FileSkillSource implements SkillSource {
     }
 
     try {
-      const files = readdirSync(this.skillsDirectory);
-      const mdFiles = files.filter(file => extname(file) === '.md');
-      
-      this.skills = mdFiles.map(file => {
-        const skillId = basename(file, '.md');
-        return {
-          id: skillId,
-          name: this.formatSkillName(skillId),
-          description: `Local skill: ${skillId}`
-        };
-      });
-
+      this.skills = this.scanDirectoryRecursively(this.skillsDirectory);
       console.log(`Found ${this.skills.length} local skills in ${this.skillsDirectory}`);
     } catch (err) {
       console.warn(`Failed to read skills directory: ${(err as Error).message}`);
     }
+  }
+
+  private scanDirectoryRecursively(dirPath: string): SkillMetadata[] {
+    const skills: SkillMetadata[] = [];
+    
+    try {
+      const entries = readdirSync(dirPath);
+      
+      for (const entry of entries) {
+        const fullPath = join(dirPath, entry);
+        const stat = statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+          // Recursively scan subdirectories
+          skills.push(...this.scanDirectoryRecursively(fullPath));
+        } else if (stat.isFile() && extname(entry) === '.md') {
+          // Create skill ID from relative path
+          const relativePath = relative(this.skillsDirectory, fullPath);
+          const skillId = this.createSkillId(relativePath);
+          const categoryPath = relative(this.skillsDirectory, dirPath);
+          
+          skills.push({
+            id: skillId,
+            name: this.formatSkillName(basename(entry, '.md')),
+            description: `Local skill: ${categoryPath ? `${categoryPath}/` : ''}${basename(entry, '.md')}`,
+            filePath: fullPath
+          } as any);
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to read directory ${dirPath}: ${(err as Error).message}`);
+    }
+    
+    return skills;
+  }
+
+  private createSkillId(relativePath: string): string {
+    // Convert path like "coding/patterns.md" to "coding-patterns"
+    return relativePath
+      .replace(/\.md$/, '')
+      .replace(/[/\\]/g, '-')
+      .toLowerCase();
   }
 
   private formatSkillName(skillId: string): string {
