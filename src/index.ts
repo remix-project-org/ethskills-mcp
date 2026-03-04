@@ -3,12 +3,17 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import express, { Request, Response } from "express";
 import { randomUUID } from "crypto";
+import { SkillManager } from "./SkillManager";
+import { WebSkillSource } from "./sources/WebSkillSource";
+import { FileSkillSource } from "./sources/FileSkillSource";
+import { SkillMetadata } from "./types";
 
 const PORT = parseInt(process.env.PORT || "9005");
 const HOST = process.env.HOST || "0.0.0.0";
 const ETHSKILLS_BASE_URL = "https://ethskills.com";
+const SKILLS_DIRECTORY = process.env.SKILLS_DIRECTORY || "./skills";
 
-const SKILLS = [
+const ETHSKILLS_METADATA: SkillMetadata[] = [
   {
     id: "ship",
     name: "Ship",
@@ -96,30 +101,21 @@ const SKILLS = [
   },
 ];
 
-const skillCache = new Map<string, string>();
+const skillManager = new SkillManager();
 
-async function loadAllSkills(): Promise<void> {
-  console.log(`Downloading ${SKILLS.length} skills from ${ETHSKILLS_BASE_URL}...`);
+async function initializeSkillSources(): Promise<void> {
+  // Add web-based skills from ethskills.com
+  const webSource = new WebSkillSource(ETHSKILLS_BASE_URL, ETHSKILLS_METADATA);
+  skillManager.addSource(webSource);
+  await webSource.preloadAllSkills();
 
-  await Promise.all(
-    SKILLS.map(async (skill) => {
-      const url = `${ETHSKILLS_BASE_URL}/${skill.id}/SKILL.md`;
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          console.warn(`[${skill.id}] HTTP ${response.status} — skipped`);
-          return;
-        }
-        const content = await response.text();
-        skillCache.set(skill.id, content);
-        console.log(`[${skill.id}] loaded (${content.length} bytes)`);
-      } catch (err) {
-        console.warn(`[${skill.id}] fetch failed: ${(err as Error).message}`);
-      }
-    })
-  );
+  // Add file-based skills from local directory
+  const fileSource = new FileSkillSource(SKILLS_DIRECTORY);
+  skillManager.addSource(fileSource);
 
-  console.log(`Skills ready: ${skillCache.size}/${SKILLS.length}`);
+  console.log("\n=== Skill Sources Summary ===");
+  skillManager.getSourcesInfo().forEach(info => console.log(info));
+  console.log("==============================\n");
 }
 
 function createMcpServer(): Server {
@@ -132,7 +128,7 @@ function createMcpServer(): Server {
     tools: [
       {
         name: "list_skills",
-        description: "List all available Ethereum development skills from ethskills.com",
+        description: "List all available Ethereum development skills from multiple sources (ethskills.com and local files)",
         inputSchema: { type: "object" as const, properties: {} },
       },
       {
@@ -157,16 +153,20 @@ function createMcpServer(): Server {
     const { name, arguments: args } = request.params;
 
     if (name === "list_skills") {
-      const skillList = SKILLS.map((s) => {
-        const note = skillCache.has(s.id) ? "" : " *(unavailable)*";
-        return `- **${s.name}** (id: \`${s.id}\`): ${s.description}${note}`;
+      const allSkills = skillManager.getAllSkills();
+      const skillList = allSkills.map((s: any) => {
+        const note = skillManager.isSkillAvailable(s.id) ? "" : " *(unavailable)*";
+        const sourceNote = s.source ? ` [${s.source}]` : "";
+        return `- **${s.name}** (id: \`${s.id}\`): ${s.description}${note}${sourceNote}`;
       }).join("\n");
+
+      const sourcesInfo = skillManager.getSourcesInfo().join("\n- ");
 
       return {
         content: [
           {
             type: "text" as const,
-            text: `# Available Ethereum Development Skills\n\nUse \`get_skill\` with a skill id to read the full content.\n\n${skillList}`,
+            text: `# Available Ethereum Development Skills\n\nUse \`get_skill\` with a skill id to read the full content.\n\n## Sources:\n- ${sourcesInfo}\n\n## Skills:\n${skillList}`,
           },
         ],
       };
@@ -174,20 +174,21 @@ function createMcpServer(): Server {
 
     if (name === "get_skill") {
       const skill_id = (args as { skill_id: string }).skill_id;
-      const skill = SKILLS.find((s) => s.id === skill_id);
+      const allSkills = skillManager.getAllSkills();
+      const skill = allSkills.find((s) => s.id === skill_id);
 
       if (!skill) {
-        const validIds = SKILLS.map((s) => s.id).join(", ");
+        const validIds = allSkills.map((s) => s.id).join(", ");
         return {
           content: [{ type: "text" as const, text: `Unknown skill id: '${skill_id}'. Valid ids are: ${validIds}` }],
           isError: true,
         };
       }
 
-      const content = skillCache.get(skill_id);
+      const content = await skillManager.getSkillContent(skill_id);
       if (!content) {
         return {
-          content: [{ type: "text" as const, text: `Skill '${skill_id}' content is unavailable (failed to load at startup).` }],
+          content: [{ type: "text" as const, text: `Skill '${skill_id}' content is unavailable (failed to load).` }],
           isError: true,
         };
       }
@@ -220,11 +221,15 @@ app.use((_req: Request, res: Response, next) => {
 const sessions = new Map<string, { transport: StreamableHTTPServerTransport }>();
 
 app.get("/health", (_req: Request, res: Response) => {
+  const allSkills = skillManager.getAllSkills();
+  const availableSkills = allSkills.filter(skill => skillManager.isSkillAvailable(skill.id));
+  
   res.json({
     status: "ok",
     service: "ethskills-mcp",
-    skills_loaded: skillCache.size,
-    skills_total: SKILLS.length,
+    skills_loaded: availableSkills.length,
+    skills_total: allSkills.length,
+    sources: skillManager.getSourcesInfo(),
   });
 });
 
@@ -276,7 +281,7 @@ app.delete("/mcp", async (req: Request, res: Response) => {
 });
 
 async function main(): Promise<void> {
-  await loadAllSkills();
+  await initializeSkillSources();
 
   app.listen(PORT, HOST, () => {
     console.log(`ethskills MCP server listening on ${HOST}:${PORT}`);
