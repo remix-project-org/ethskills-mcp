@@ -6,100 +6,11 @@ import { randomUUID } from "crypto";
 import { SkillManager } from "./SkillManager";
 import { WebSkillSource } from "./sources/WebSkillSource";
 import { FileSkillSource } from "./sources/FileSkillSource";
-import { SkillMetadata } from "./types";
+import { ETHSKILLS_BASE_URL, CYFRIN_SOLSKILL_BASE_URL, ETHSKILLS_METADATA, CYFRIN_SOLSKILL_METADATA } from "./skillsConfig";
 
 const PORT = parseInt(process.env.PORT || "9005");
 const HOST = process.env.HOST || "0.0.0.0";
-const ETHSKILLS_BASE_URL = "https://ethskills.com";
 const SKILLS_DIRECTORY = process.env.SKILLS_DIRECTORY || "./skills";
-
-const ETHSKILLS_METADATA: SkillMetadata[] = [
-  {
-    id: "ship",
-    name: "Ship",
-    description: "End-to-end guide for AI agents — from a dApp idea to deployed production app",
-  },
-  {
-    id: "why",
-    name: "Why Ethereum",
-    description: "Covers upgrades, tradeoffs, and use case matching for Ethereum",
-  },
-  {
-    id: "gas",
-    name: "Gas & Costs",
-    description: "Current gas pricing and mainnet vs L2 cost comparison",
-  },
-  {
-    id: "wallets",
-    name: "Wallets",
-    description: "Wallet creation, connection, signing, multisig, and account abstraction",
-  },
-  {
-    id: "l2s",
-    name: "Layer 2s",
-    description: "L2 landscape, bridging, and deployment differences across L2 networks",
-  },
-  {
-    id: "standards",
-    name: "Standards",
-    description: "Token, identity, and payment standards including ERC-20, ERC-721, and more",
-  },
-  {
-    id: "tools",
-    name: "Tools",
-    description: "Frameworks, libraries, RPCs, and block explorers for Ethereum development",
-  },
-  {
-    id: "building-blocks",
-    name: "Money Legos",
-    description: "DeFi protocols and composability patterns",
-  },
-  {
-    id: "orchestration",
-    name: "Orchestration",
-    description: "Three-phase build system and dApp patterns",
-  },
-  {
-    id: "addresses",
-    name: "Contract Addresses",
-    description: "Verified contract addresses for major protocols across Ethereum mainnet and L2s",
-  },
-  {
-    id: "concepts",
-    name: "Concepts",
-    description: "Mental models for onchain building",
-  },
-  {
-    id: "security",
-    name: "Security",
-    description: "Solidity security patterns and vulnerability defense",
-  },
-  {
-    id: "testing",
-    name: "Testing",
-    description: "Foundry testing methodologies for smart contracts",
-  },
-  {
-    id: "indexing",
-    name: "Indexing",
-    description: "Reading and querying onchain data",
-  },
-  {
-    id: "frontend-ux",
-    name: "Frontend UX",
-    description: "Scaffold-ETH 2 rules and patterns for frontend development",
-  },
-  {
-    id: "frontend-playbook",
-    name: "Frontend Playbook",
-    description: "Complete build-to-production pipeline for dApp frontends",
-  },
-  {
-    id: "qa",
-    name: "QA",
-    description: "Production QA checklist for dApps",
-  },
-];
 
 const skillManager = new SkillManager();
 
@@ -108,6 +19,15 @@ async function initializeSkillSources(): Promise<void> {
   const webSource = new WebSkillSource(ETHSKILLS_BASE_URL, ETHSKILLS_METADATA);
   skillManager.addSource(webSource);
   await webSource.preloadAllSkills();
+
+  // Add Cyfrin Solskill source with custom URL resolver
+  const cyfrinSolskillSource = WebSkillSource.createCustomUrlSource(
+    CYFRIN_SOLSKILL_BASE_URL,
+    CYFRIN_SOLSKILL_METADATA,
+    (skillId: string, baseUrl: string) => `${baseUrl}/${skillId}/SKILL.md`
+  );
+  skillManager.addSource(cyfrinSolskillSource);
+  await cyfrinSolskillSource.preloadAllSkills();
 
   // Add file-based skills from local directory
   const fileSource = new FileSkillSource(SKILLS_DIRECTORY);
