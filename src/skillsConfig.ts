@@ -75,11 +75,6 @@ export const ETHSKILLS_METADATA: SkillMetadata[] = [
     description: "Reading and querying onchain data",
   },
   {
-    id: "frontend-ux",
-    name: "Frontend UX",
-    description: "Scaffold-ETH 2 rules and patterns for frontend development",
-  },
-  {
     id: "frontend-playbook",
     name: "Frontend Playbook",
     description: "Complete build-to-production pipeline for dApp frontends",
