@@ -1,6 +1,6 @@
 import { SkillSource, SkillMetadata } from "../types";
 import { readFileSync, readdirSync, existsSync, statSync } from "fs";
-import { join, extname, basename, relative } from "path";
+import { join, basename, relative } from "path";
 
 export class FileSkillSource implements SkillSource {
   private skills: SkillMetadata[] = [];
@@ -36,6 +36,41 @@ export class FileSkillSource implements SkillSource {
       return content;
     } catch (err) {
       console.warn(`[${skillId}] file read failed: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  async loadSkillReference(skillId: string, referencePath: string): Promise<string | null> {
+    // Find the skill directory first
+    const skillFile = this.findSkillFile(skillId);
+    if (!skillFile || !existsSync(skillFile)) {
+      return null;
+    }
+
+    // Get the skill directory (parent of SKILL.md)
+    const skillDirectory = join(skillFile, '..');
+    const referenceFile = join(skillDirectory, referencePath);
+
+    // Security check: ensure the reference path doesn't escape the skill directory
+    const normalizedSkillDir = join(skillDirectory).replace(/\\/g, '/');
+    const normalizedReferenceFile = join(referenceFile).replace(/\\/g, '/');
+    
+    if (!normalizedReferenceFile.startsWith(normalizedSkillDir)) {
+      console.warn(`[${skillId}] Reference path '${referencePath}' attempts to escape skill directory`);
+      return null;
+    }
+
+    if (!existsSync(referenceFile)) {
+      console.warn(`[${skillId}] Reference file not found: ${referenceFile}`);
+      return null;
+    }
+
+    try {
+      const content = readFileSync(referenceFile, 'utf-8');
+      console.log(`[${skillId}] loaded reference '${referencePath}' (${content.length} bytes)`);
+      return content;
+    } catch (err) {
+      console.warn(`[${skillId}] reference file read failed: ${(err as Error).message}`);
       return null;
     }
   }
@@ -77,18 +112,17 @@ export class FileSkillSource implements SkillSource {
         if (stat.isDirectory() && !isReference) {
           // Recursively scan subdirectories
           skills.push(...this.scanDirectoryRecursively(fullPath));
-        } else if (stat.isFile() && extname(entry) === '.md') {
-          // Create skill ID from relative path
-          const relativePath = relative(this.skillsDirectory, fullPath);
-          const skillId = this.createSkillId(relativePath);
+        } else if (stat.isFile() && entry === 'SKILL.md') {
+          // Create skill ID from directory path (not filename)
           const categoryPath = relative(this.skillsDirectory, dirPath);
+          const skillId = this.createSkillId(categoryPath);
           
           // Extract name and description from file content
           const { name, description } = this.extractMetadataFromFile(fullPath);
           
           skills.push({
             id: skillId,
-            name: name || this.formatSkillName(basename(entry, '.md')),
+            name: name || this.formatSkillName(skillId),
             description: description,
             filePath: fullPath
           } as any);
@@ -101,10 +135,12 @@ export class FileSkillSource implements SkillSource {
     return skills;
   }
 
-  private createSkillId(relativePath: string): string {
-    // Convert path like "coding/patterns.md" to "coding-patterns"
-    return relativePath
-      .replace(/\.md$/, '')
+  private createSkillId(directoryPath: string): string {
+    // Convert path like "coding" or "security/ethereum" to skill ID
+    if (!directoryPath || directoryPath === '.') {
+      return 'root';
+    }
+    return directoryPath
       .replace(/[/\\]/g, '-')
       .toLowerCase();
   }

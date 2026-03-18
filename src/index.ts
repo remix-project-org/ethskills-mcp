@@ -66,6 +66,24 @@ function createMcpServer(): Server {
           required: ["skill_id"],
         },
       },
+      {
+        name: "get_skill_reference",
+        description: "Read a reference file associated with a specific skill",
+        inputSchema: {
+          type: "object" as const,
+          properties: {
+            skill_id: {
+              type: "string",
+              description: "The skill identifier that owns the reference file",
+            },
+            reference_path: {
+              type: "string",
+              description: "Relative path from the skill's directory to the reference file (e.g. 'references/claims-lifecycle.md')",
+            },
+          },
+          required: ["skill_id", "reference_path"],
+        },
+      },
     ],
   }));
 
@@ -118,6 +136,43 @@ function createMcpServer(): Server {
       return {
         content: [{ type: "text" as const, text: content }],
       };
+    }
+
+    if (name === "get_skill_reference") {
+      const { skill_id, reference_path } = args as { skill_id: string; reference_path: string };
+      const allSkills = skillManager.getAllSkills();
+      const skill = allSkills.find((s) => s.id === skill_id);
+
+      if (!skill) {
+        const validIds = allSkills.map((s) => s.id).join(", ");
+        console.warn(`Requested unknown skill id: '${skill_id}'. Valid ids are: ${validIds}`);
+        return {
+          content: [{ type: "text" as const, text: `Unknown skill id: '${skill_id}'. Valid ids are: ${validIds}` }],
+          isError: true,
+        };
+      }
+
+      try {
+        const referenceContent = await skillManager.getSkillReference(skill_id, reference_path);
+        if (!referenceContent) {
+          console.warn(`Reference file not found: ${reference_path} for skill: ${skill_id}`);
+          return {
+            content: [{ type: "text" as const, text: `Reference file '${reference_path}' not found for skill '${skill_id}'` }],
+            isError: true,
+          };
+        }
+        
+        console.log(`Successfully loaded reference: ${reference_path} for skill: ${skill_id}`);
+        return {
+          content: [{ type: "text" as const, text: referenceContent }],
+        };
+      } catch (error) {
+        console.error(`Failed to load reference: ${reference_path} for skill: ${skill_id}`, error);
+        return {
+          content: [{ type: "text" as const, text: `Failed to load reference file '${reference_path}' for skill '${skill_id}': ${(error as Error).message}` }],
+          isError: true,
+        };
+      }
     }
     console.warn(`Received request for unknown tool: '${name}'`);
     return {
