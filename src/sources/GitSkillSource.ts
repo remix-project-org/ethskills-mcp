@@ -1,6 +1,6 @@
 import { SkillSource, SkillMetadata } from "../types";
 import { readFileSync, readdirSync, existsSync, statSync, rmSync } from "fs";
-import { join, extname, basename, relative } from "path";
+import { join, basename, relative } from "path";
 import { execSync } from "child_process";
 import { tmpdir } from "os";
 import { GitHubRepoConfig } from "../skillsConfig";

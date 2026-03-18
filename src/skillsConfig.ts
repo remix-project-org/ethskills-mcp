@@ -103,15 +103,15 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
   {
     url: "https://github.com/Uniswap/uniswap-ai",
     branch: "main",
-    skillsPath: "skills",
+    skillsPath: "packages/plugins",
     name: "Uniswap-specific skills"
-  }
-  // Add GitHub repositories here
+  },
+  // Add more GitHub repositories here
   // Example:
   // {
-  //   url: "https://github.com/Cyfrin/solskill",
+  //   url: "https://github.com/username/repo-name",
   //   branch: "main",
   //   skillsPath: "skills",
-  //   name: "Cyfrin Solskill GitHub"
+  //   name: "Custom Skills Repo"
   // }
 ];

@@ -7,7 +7,8 @@ const path = require('path');
 const { SkillManager } = require('../dist/SkillManager');
 const { WebSkillSource } = require('../dist/sources/WebSkillSource');
 const { FileSkillSource } = require('../dist/sources/FileSkillSource');
-const { ETHSKILLS_BASE_URL, CYFRIN_SOLSKILL_BASE_URL, ETHSKILLS_METADATA } = require('../dist/skillsConfig');
+const { GitSkillSource } = require('../dist/sources/GitSkillSource');
+const { ETHSKILLS_BASE_URL, ETHSKILLS_METADATA, GITHUB_REPOS } = require('../dist/skillsConfig');
 
 const SKILLS_DIRECTORY = process.env.SKILLS_DIRECTORY || "./skills";
 
@@ -30,18 +31,20 @@ async function main() {
     skillManager.addSource(webSource);
     await webSource.preloadAllSkills();
 
-    // Add Cyfrin Solskill source with custom URL resolver
-    const cyfrinSolskillSource = WebSkillSource.createCustomUrlSource(
-      CYFRIN_SOLSKILL_BASE_URL,
-      CYFRIN_SOLSKILL_METADATA,
-      (skillId, baseUrl) => `${baseUrl}/${skillId}/SKILL.md`
-    );
-    skillManager.addSource(cyfrinSolskillSource);
-    await cyfrinSolskillSource.preloadAllSkills();
-    
     // Add file source
     const fileSource = new FileSkillSource(SKILLS_DIRECTORY);
     skillManager.addSource(fileSource);
+    
+    // Add GitHub repository-based skills
+    for (const repoConfig of GITHUB_REPOS) {
+      try {
+        console.log(`Initializing GitHub repo: ${repoConfig.name} (${repoConfig.url})`);
+        const gitSource = new GitSkillSource(repoConfig);
+        skillManager.addSource(gitSource);
+      } catch (error) {
+        console.error(`Failed to initialize GitHub repo ${repoConfig.name}: ${error.message}`);
+      }
+    }
     
     // Get all skills
     const allSkills = skillManager.getAllSkills();
