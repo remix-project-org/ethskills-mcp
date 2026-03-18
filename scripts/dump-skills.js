@@ -7,7 +7,7 @@ const path = require('path');
 const { SkillManager } = require('../dist/SkillManager');
 const { WebSkillSource } = require('../dist/sources/WebSkillSource');
 const { FileSkillSource } = require('../dist/sources/FileSkillSource');
-const { ETHSKILLS_BASE_URL, CYFRIN_SOLSKILL_BASE_URL, ETHSKILLS_METADATA, CYFRIN_SOLSKILL_METADATA } = require('../dist/skillsConfig');
+const { ETHSKILLS_BASE_URL, CYFRIN_SOLSKILL_BASE_URL, ETHSKILLS_METADATA } = require('../dist/skillsConfig');
 
 const SKILLS_DIRECTORY = process.env.SKILLS_DIRECTORY || "./skills";
 

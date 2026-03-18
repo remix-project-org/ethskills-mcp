@@ -6,7 +6,8 @@ import { randomUUID } from "crypto";
 import { SkillManager } from "./SkillManager";
 import { WebSkillSource } from "./sources/WebSkillSource";
 import { FileSkillSource } from "./sources/FileSkillSource";
-import { ETHSKILLS_BASE_URL, CYFRIN_SOLSKILL_BASE_URL, ETHSKILLS_METADATA, CYFRIN_SOLSKILL_METADATA } from "./skillsConfig";
+import { GitSkillSource } from "./sources/GitSkillSource";
+import { ETHSKILLS_BASE_URL, ETHSKILLS_METADATA, GITHUB_REPOS } from "./skillsConfig";
 
 const PORT = parseInt(process.env.PORT || "9005");
 const HOST = process.env.HOST || "0.0.0.0";
@@ -20,18 +21,20 @@ async function initializeSkillSources(): Promise<void> {
   skillManager.addSource(webSource);
   await webSource.preloadAllSkills();
 
-  // Add Cyfrin Solskill source with custom URL resolver
-  const cyfrinSolskillSource = WebSkillSource.createCustomUrlSource(
-    CYFRIN_SOLSKILL_BASE_URL,
-    CYFRIN_SOLSKILL_METADATA,
-    (skillId: string, baseUrl: string) => `${baseUrl}/${skillId}/SKILL.md`
-  );
-  skillManager.addSource(cyfrinSolskillSource);
-  await cyfrinSolskillSource.preloadAllSkills();
-
   // Add file-based skills from local directory
   const fileSource = new FileSkillSource(SKILLS_DIRECTORY);
   skillManager.addSource(fileSource);
+
+  // Add GitHub repository-based skills
+  for (const repoConfig of GITHUB_REPOS) {
+    try {
+      console.log(`Initializing GitHub repo: ${repoConfig.name} (${repoConfig.url})`);
+      const gitSource = new GitSkillSource(repoConfig);
+      skillManager.addSource(gitSource);
+    } catch (error) {
+      console.error(`Failed to initialize GitHub repo ${repoConfig.name}: ${(error as Error).message}`);
+    }
+  }
 
   console.log("\n=== Skill Sources Summary ===");
   skillManager.getSourcesInfo().forEach(info => console.log(info));

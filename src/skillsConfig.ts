@@ -1,7 +1,6 @@
 import { SkillMetadata } from "./types";
 
 export const ETHSKILLS_BASE_URL = "https://ethskills.com";
-export const CYFRIN_SOLSKILL_BASE_URL = "https://raw.githubusercontent.com/Cyfrin/solskill/refs/heads/main/skills";
 
 export const ETHSKILLS_METADATA: SkillMetadata[] = [
   {
@@ -86,10 +85,33 @@ export const ETHSKILLS_METADATA: SkillMetadata[] = [
   },
 ];
 
-export const CYFRIN_SOLSKILL_METADATA: SkillMetadata[] = [
+// GitHub repository configurations
+export interface GitHubRepoConfig {
+  url: string;
+  branch?: string;
+  skillsPath?: string; // Path within repo where skills are located (default: root)
+  name: string; // Display name for the source
+}
+
+export const GITHUB_REPOS: GitHubRepoConfig[] = [
   {
-    id: "solidity",
-    name: "Solidity Development Standards",
-    description: "Create production grade smart contracts. Use this skill when the user asks to write smart contracts.",
+    url: "https://github.com/Cyfrin/solskill",
+    branch: "main",
+    skillsPath: "skills",
+    name: "Cyfrin Solskill GitHub"
   },
+  {
+    url: "https://github.com/Uniswap/uniswap-ai",
+    branch: "main",
+    skillsPath: "skills",
+    name: "Uniswap-specific skills"
+  }
+  // Add GitHub repositories here
+  // Example:
+  // {
+  //   url: "https://github.com/Cyfrin/solskill",
+  //   branch: "main",
+  //   skillsPath: "skills",
+  //   name: "Cyfrin Solskill GitHub"
+  // }
 ];
