@@ -40,7 +40,7 @@ export class FileSkillSource implements SkillSource {
     }
   }
 
-  async loadSkillReference(skillId: string, referencePath: string): Promise<string | null> {
+  async loadSkillResource(skillId: string, resourcePath: string): Promise<string | null> {
     // Find the skill directory first
     const skillFile = this.findSkillFile(skillId);
     if (!skillFile || !existsSync(skillFile)) {
@@ -49,28 +49,28 @@ export class FileSkillSource implements SkillSource {
 
     // Get the skill directory (parent of SKILL.md)
     const skillDirectory = join(skillFile, '..');
-    const referenceFile = join(skillDirectory, referencePath);
+    const resourceFile = join(skillDirectory, resourcePath);
 
-    // Security check: ensure the reference path doesn't escape the skill directory
+    // Security check: ensure the resource path doesn't escape the skill directory
     const normalizedSkillDir = join(skillDirectory).replace(/\\/g, '/');
-    const normalizedReferenceFile = join(referenceFile).replace(/\\/g, '/');
+    const normalizedResourceFile = join(resourceFile).replace(/\\/g, '/');
     
-    if (!normalizedReferenceFile.startsWith(normalizedSkillDir)) {
-      console.warn(`[${skillId}] Reference path '${referencePath}' attempts to escape skill directory`);
+    if (!normalizedResourceFile.startsWith(normalizedSkillDir)) {
+      console.warn(`[${skillId}] Resource path '${resourcePath}' attempts to escape skill directory`);
       return null;
     }
 
-    if (!existsSync(referenceFile)) {
-      console.warn(`[${skillId}] Reference file not found: ${referenceFile}`);
+    if (!existsSync(resourceFile)) {
+      console.warn(`[${skillId}] Resource file not found: ${resourceFile}`);
       return null;
     }
 
     try {
-      const content = readFileSync(referenceFile, 'utf-8');
-      console.log(`[${skillId}] loaded reference '${referencePath}' (${content.length} bytes)`);
+      const content = readFileSync(resourceFile, 'utf-8');
+      console.log(`[${skillId}] loaded resource '${resourcePath}' (${content.length} bytes)`);
       return content;
     } catch (err) {
-      console.warn(`[${skillId}] reference file read failed: ${(err as Error).message}`);
+      console.warn(`[${skillId}] resource file read failed: ${(err as Error).message}`);
       return null;
     }
   }

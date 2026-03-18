@@ -27,10 +27,10 @@ export class SkillManager {
     return null;
   }
 
-  async getSkillReference(skillId: string, referencePath: string): Promise<string | null> {
+  async getSkillResource(skillId: string, resourcePath: string): Promise<string | null> {
     for (const source of this.sources) {
-      if (source.loadSkillReference && source.isSkillAvailable(skillId)) {
-        const content = await source.loadSkillReference(skillId, referencePath);
+      if (source.loadSkillResource && source.isSkillAvailable(skillId)) {
+        const content = await source.loadSkillResource(skillId, resourcePath);
         if (content !== null) {
           return content;
         }

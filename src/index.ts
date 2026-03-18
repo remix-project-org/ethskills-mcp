@@ -67,8 +67,8 @@ function createMcpServer(): Server {
         },
       },
       {
-        name: "get_skill_reference",
-        description: "Read a reference file associated with a specific skill",
+        name: "get_skill_resource",
+        description: "Read a resource file associated with a specific skill (references, assets, scripts, etc.)",
         inputSchema: {
           type: "object" as const,
           properties: {
@@ -76,12 +76,12 @@ function createMcpServer(): Server {
               type: "string",
               description: "The skill identifier that owns the reference file",
             },
-            reference_path: {
+            resource_path: {
               type: "string",
-              description: "Relative path from the skill's directory to the reference file (e.g. 'references/claims-lifecycle.md')",
+              description: "Relative path from the skill's directory to the resource file (e.g. 'references/claims-lifecycle.md', 'assets/diagram.png', 'scripts/setup.sh')",
             },
           },
-          required: ["skill_id", "reference_path"],
+          required: ["skill_id", "resource_path"],
         },
       },
     ],
@@ -138,8 +138,8 @@ function createMcpServer(): Server {
       };
     }
 
-    if (name === "get_skill_reference") {
-      const { skill_id, reference_path } = args as { skill_id: string; reference_path: string };
+    if (name === "get_skill_resource") {
+      const { skill_id, resource_path } = args as { skill_id: string; resource_path: string };
       const allSkills = skillManager.getAllSkills();
       const skill = allSkills.find((s) => s.id === skill_id);
 
@@ -153,23 +153,23 @@ function createMcpServer(): Server {
       }
 
       try {
-        const referenceContent = await skillManager.getSkillReference(skill_id, reference_path);
-        if (!referenceContent) {
-          console.warn(`Reference file not found: ${reference_path} for skill: ${skill_id}`);
+        const resourceContent = await skillManager.getSkillResource(skill_id, resource_path);
+        if (!resourceContent) {
+          console.warn(`Resource file not found: ${resource_path} for skill: ${skill_id}`);
           return {
-            content: [{ type: "text" as const, text: `Reference file '${reference_path}' not found for skill '${skill_id}'` }],
+            content: [{ type: "text" as const, text: `Resource file '${resource_path}' not found for skill '${skill_id}'` }],
             isError: true,
           };
         }
         
-        console.log(`Successfully loaded reference: ${reference_path} for skill: ${skill_id}`);
+        console.log(`Successfully loaded resource: ${resource_path} for skill: ${skill_id}`);
         return {
-          content: [{ type: "text" as const, text: referenceContent }],
+          content: [{ type: "text" as const, text: resourceContent }],
         };
       } catch (error) {
-        console.error(`Failed to load reference: ${reference_path} for skill: ${skill_id}`, error);
+        console.error(`Failed to load resource: ${resource_path} for skill: ${skill_id}`, error);
         return {
-          content: [{ type: "text" as const, text: `Failed to load reference file '${reference_path}' for skill '${skill_id}': ${(error as Error).message}` }],
+          content: [{ type: "text" as const, text: `Failed to load resource file '${resource_path}' for skill '${skill_id}': ${(error as Error).message}` }],
           isError: true,
         };
       }
