@@ -72,8 +72,9 @@ export class FileSkillSource implements SkillSource {
       for (const entry of entries) {
         const fullPath = join(dirPath, entry);
         const stat = statSync(fullPath);
-        
-        if (stat.isDirectory()) {
+        const isReference = entry === 'references'
+        // do not crawl references.
+        if (stat.isDirectory() && !isReference) {
           // Recursively scan subdirectories
           skills.push(...this.scanDirectoryRecursively(fullPath));
         } else if (stat.isFile() && extname(entry) === '.md') {
@@ -151,7 +152,18 @@ export class FileSkillSource implements SkillSource {
         for (let i = startIndex; i < lines.length; i++) {
           const line = lines[i].trim();
           if (line.startsWith('#')) {
-            name = line.replace(/^#+\s*/, '');
+            // Extract multi-line header
+            let headerLines = [line.replace(/^#+\s*/, '')];
+            
+            // Check if next lines continue the header (non-empty, don't start with #, *, or **)
+            for (let j = i + 1; j < lines.length; j++) {
+              const nextLine = lines[j].trim();
+              if (!nextLine) break; // Empty line ends the header
+              if (nextLine.startsWith('#') || nextLine.startsWith('**') || nextLine.startsWith('*')) break;
+              headerLines.push(nextLine);
+            }
+            
+            name = headerLines.join(' ').trim();
             break;
           }
         }
@@ -159,12 +171,37 @@ export class FileSkillSource implements SkillSource {
       
       // If no description from frontmatter, try to extract from content
       if (!frontmatter?.description) {
+        let descriptionLines: string[] = [];
+        let foundStart = false;
+        
         for (let i = startIndex; i < lines.length; i++) {
           const line = lines[i].trim();
-          if (line && !line.startsWith('#') && !line.startsWith('**') && !line.startsWith('*')) {
-            description = line;
-            break;
+          
+          // Skip headers and empty lines
+          if (line.startsWith('#') || !line) {
+            if (foundStart) break; // End of description block
+            continue;
           }
+          
+          // Skip markdown formatting markers at start of description
+          if (!foundStart && (line.startsWith('**') || line.startsWith('*'))) {
+            continue;
+          }
+          
+          foundStart = true;
+          descriptionLines.push(line);
+          
+          // Stop at next header, empty line, or formatting marker
+          if (i + 1 < lines.length) {
+            const nextLine = lines[i + 1].trim();
+            if (!nextLine || nextLine.startsWith('#') || nextLine.startsWith('**') || nextLine.startsWith('*')) {
+              break;
+            }
+          }
+        }
+        
+        if (descriptionLines.length > 0) {
+          description = descriptionLines.join(' ').trim();
         }
       }
       
@@ -193,14 +230,32 @@ export class FileSkillSource implements SkillSource {
     if (endIndex === -1) return null;
     
     const frontmatter: Record<string, string> = {};
+    let currentKey: string | null = null;
+    let currentValue: string[] = [];
+    
     for (let i = 1; i < endIndex; i++) {
       const line = lines[i];
       const colonIndex = line.indexOf(':');
-      if (colonIndex !== -1) {
-        const key = line.substring(0, colonIndex).trim();
+      
+      if (colonIndex !== -1 && !line.startsWith(' ') && !line.startsWith('\t')) {
+        // Save previous key-value if exists
+        if (currentKey) {
+          frontmatter[currentKey] = currentValue.join('\n').trim();
+        }
+        
+        // Start new key-value pair
+        currentKey = line.substring(0, colonIndex).trim();
         const value = line.substring(colonIndex + 1).trim();
-        frontmatter[key] = value;
+        currentValue = value ? [value] : [];
+      } else if (currentKey && (line.startsWith(' ') || line.startsWith('\t') || line.trim() === '')) {
+        // Continuation of multi-line value
+        currentValue.push(line.replace(/^[ \t]*/, ''));
       }
+    }
+    
+    // Save the last key-value pair
+    if (currentKey) {
+      frontmatter[currentKey] = currentValue.join('\n').trim();
     }
     
     return frontmatter;
