@@ -22,7 +22,7 @@ FCA-regulated property funds, UK mortgage rules, and UK REIT structures.
 > integration but no live digital title system exists as of 2025.
 >
 > ⚠️ **Jurisdiction note**: For EU rules use `solidity-real-estate-eu`. For US rules use
-> `solidity-real-estate`. Scotland and Northern Ireland have different land law systems
+> `solidity-real-estate-us`. Scotland and Northern Ireland have different land law systems
 > — flag jurisdiction within UK carefully.
 
 ---

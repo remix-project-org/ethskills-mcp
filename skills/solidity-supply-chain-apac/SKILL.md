@@ -19,7 +19,7 @@ traceability applications across Asia-Pacific markets: Singapore, Hong Kong, Jap
 South Korea, and Australia.
 
 > ⚠️ **Multi-jurisdiction note**: APAC supply chain regulations vary significantly by country.
-> Identify target jurisdiction(s) first. For US rules use `solidity-supply-chain`.
+> Identify target jurisdiction(s) first. For US rules use `solidity-supply-chain-us`.
 > For EU rules use `solidity-supply-chain-eu`. For UK rules use `solidity-supply-chain-uk`.
 
 ---

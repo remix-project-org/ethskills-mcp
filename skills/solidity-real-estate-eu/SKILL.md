@@ -22,7 +22,7 @@ fund structures, mortgage credit directives, and EU crowdfunding regulations.
 > beneficial rights** but cannot replace the civil law title transfer process. Member states
 > with blockchain land registries (Sweden, Estonia, Georgia) have specific local rules.
 >
-> ⚠️ **Jurisdiction note**: For US rules use `solidity-real-estate`. For UK rules use
+> ⚠️ **Jurisdiction note**: For US rules use `solidity-real-estate-us`. For UK rules use
 > `solidity-real-estate-uk`.
 
 ---

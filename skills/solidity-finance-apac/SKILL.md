@@ -18,7 +18,7 @@ applications across Asia-Pacific markets: Singapore, Hong Kong, Japan, South Kor
 
 > ⚠️ **Multi-jurisdiction note**: APAC has no unified crypto framework. Each jurisdiction has
 > distinct rules. This skill covers all major markets — identify the target jurisdiction first
-> and apply the relevant section. For US use `solidity-finance`. For EU use `solidity-finance-eu`.
+> and apply the relevant section. For US use `solidity-finance-us`. For EU use `solidity-finance-eu`.
 
 ---
 

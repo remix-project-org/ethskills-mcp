@@ -1,5 +1,5 @@
 ---
-name: Address safety focus
+name: ethereum-address-safety
 description: This describes the safety measure you MUST follow when dealing with Ethereum addresses, load this skill as soon as you have to write solidtiy code, typescript code, answering questions, etc...
 ---
 

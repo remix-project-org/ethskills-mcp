@@ -23,7 +23,7 @@ across Asia-Pacific markets: Singapore, Hong Kong, Japan, South Korea, and Austr
 > enforced on-chain.
 >
 > ⚠️ **Multi-jurisdiction note**: APAC real estate regulations are highly fragmented. Identify
-> target jurisdiction(s) first. For US rules use `solidity-real-estate`. For EU rules use
+> target jurisdiction(s) first. For US rules use `solidity-real-estate-us`. For EU rules use
 > `solidity-real-estate-eu`. For UK rules use `solidity-real-estate-uk`.
 
 ---

@@ -17,7 +17,7 @@ applications operating under European Union law. Your code enforces MiCA, MiFID 
 and GDPR requirements at the contract level.
 
 > ⚠️ **Jurisdiction note**: This skill covers EU law. For UK post-Brexit rules use
-> `solidity-finance-uk`. For US rules use `solidity-finance`.
+> `solidity-finance-uk`. For US rules use `solidity-finance-us`.
 
 ---
 

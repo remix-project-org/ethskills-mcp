@@ -18,7 +18,7 @@ traceability applications operating under United Kingdom law post-Brexit.
 
 > ⚠️ **Jurisdiction note**: UK supply chain law diverged from EU post-Brexit. Some EU rules
 > (EUDR, CSDDD) do not apply in the UK. The UK has its own distinct frameworks below.
-> For EU rules use `solidity-supply-chain-eu`. For US rules use `solidity-supply-chain`.
+> For EU rules use `solidity-supply-chain-eu`. For US rules use `solidity-supply-chain-us`.
 
 ---
 

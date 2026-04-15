@@ -1,5 +1,5 @@
 ---
-name: OpenZeppelin v5.6.1 Import Paths
+name: openzeppelin-v561-import-paths
 description: Complete reference for OpenZeppelin v5.6.1 import paths with all the latest changes and new contracts. Use this WHENEVER you have to fix or write import statements in solidity.
 ---
 
