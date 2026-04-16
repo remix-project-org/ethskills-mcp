@@ -106,6 +106,11 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
     skillsPath: "packages/plugins",
     name: "Uniswap-specific skills"
   },
+  {
+    url: "https://github.com/smartcontractkit/chainlink-agent-skills",
+    branch: "main",
+    name: "Chainlink skills"
+  }
   // Add more GitHub repositories here
   // Example:
   // {
