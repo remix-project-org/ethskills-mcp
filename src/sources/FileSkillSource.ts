@@ -75,6 +75,47 @@ export class FileSkillSource implements SkillSource {
     }
   }
 
+  async getSkillResourcePaths(skillId: string): Promise<string[]> {
+    // Find the skill directory first
+    const skillFile = this.findSkillFile(skillId);
+    if (!skillFile || !existsSync(skillFile)) {
+      return [];
+    }
+
+    // Get the skill directory (parent of SKILL.md)
+    const skillDirectory = join(skillFile, '..');
+    
+    const resourcePaths: string[] = [];
+    
+    // Recursively scan for resource files
+    const scanDirectory = (dirPath: string, relativePath: string = ''): void => {
+      if (!existsSync(dirPath)) return;
+      
+      try {
+        const entries = readdirSync(dirPath);
+        
+        for (const entry of entries) {
+          if (entry === 'SKILL.md') continue; // Skip the main skill file
+          
+          const fullPath = join(dirPath, entry);
+          const stat = statSync(fullPath);
+          const entryRelativePath = relativePath ? join(relativePath, entry) : entry;
+          
+          if (stat.isDirectory()) {
+            scanDirectory(fullPath, entryRelativePath);
+          } else if (stat.isFile()) {
+            resourcePaths.push(entryRelativePath.replace(/\\/g, '/'));
+          }
+        }
+      } catch (err) {
+        console.warn(`Failed to scan directory ${dirPath}: ${(err as Error).message}`);
+      }
+    };
+    
+    scanDirectory(skillDirectory);
+    return resourcePaths;
+  }
+
   private findSkillFile(skillId: string): string | null {
     const skill = this.skills.find(s => s.id === skillId);
     return skill ? (skill as any).filePath : null;
