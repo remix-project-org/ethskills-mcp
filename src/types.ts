@@ -9,5 +9,6 @@ export interface SkillSource {
   getSkills(): SkillMetadata[];
   loadSkill(skillId: string): Promise<string | null>;
   loadSkillResource?(skillId: string, resourcePath: string): Promise<string | null>;
+  getSkillResourcePaths?(skillId: string): Promise<string[]>;
   isSkillAvailable(skillId: string): boolean;
 }

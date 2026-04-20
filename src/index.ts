@@ -213,6 +213,88 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
+app.get("/skills", (_req: Request, res: Response) => {
+  const allSkills = skillManager.getAllSkills();
+  const skillList = allSkills.map((s: any) => {
+    const note = skillManager.isSkillAvailable(s.id) ? "" : " *(unavailable)*";
+    const sourceNote = s.source ? ` [${s.source}]` : "";
+    return {
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      available: skillManager.isSkillAvailable(s.id),
+      source: s.source,
+      displayText: `- **${s.name}** (id: \`${s.id}\`): ${s.description}${note}${sourceNote}`
+    };
+  });
+
+  const sourcesInfo = skillManager.getSourcesInfo();
+
+  res.json({
+    skills: skillList,
+    sources: sourcesInfo,
+    total: allSkills.length,
+    available: skillList.filter(skill => skill.available).length
+  });
+});
+
+app.get("/skills/:skillId", async (req: Request, res: Response) => {
+  const { skillId } = req.params;
+  
+  const allSkills = skillManager.getAllSkills();
+  const skill = allSkills.find(s => s.id === skillId);
+  
+  if (!skill) {
+    const validIds = allSkills.map(s => s.id).join(", ");
+    res.status(404).json({ 
+      error: `Unknown skill id: '${skillId}'. Valid ids are: ${validIds}` 
+    });
+    return;
+  }
+  
+  try {
+    const content = await skillManager.getSkillContent(skillId);
+    if (!content) {
+      res.status(500).json({ 
+        error: `Skill '${skillId}' content is unavailable (failed to load).` 
+      });
+      return;
+    }
+    
+    // Get all resource files for this skill
+    const resources: { [path: string]: string } = {};
+    
+    // Get available resource paths dynamically
+    const resourcePaths = await skillManager.getSkillResourcePaths(skillId);
+    
+    // Load each resource file
+    for (const resourcePath of resourcePaths) {
+      try {
+        const resourceContent = await skillManager.getSkillResource(skillId, resourcePath);
+        if (resourceContent) {
+          resources[resourcePath] = resourceContent;
+        }
+      } catch (error) {
+        console.warn(`Failed to load resource ${resourcePath} for skill ${skillId}:`, error);
+      }
+    }
+    
+    res.json({
+      id: skillId,
+      name: skill.name,
+      description: skill.description,
+      content,
+      resources
+    });
+    
+  } catch (error) {
+    console.error(`Error fetching skill ${skillId}:`, error);
+    res.status(500).json({ 
+      error: `Failed to load skill '${skillId}': ${(error as Error).message}` 
+    });
+  }
+});
+
 app.post("/mcp", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 

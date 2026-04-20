@@ -50,4 +50,13 @@ export class SkillManager {
       return `${source.getName()}: ${available}/${skills.length} skills available`;
     });
   }
+
+  async getSkillResourcePaths(skillId: string): Promise<string[]> {
+    for (const source of this.sources) {
+      if (source.isSkillAvailable(skillId) && source.getSkillResourcePaths) {
+        return await source.getSkillResourcePaths(skillId);
+      }
+    }
+    return [];
+  }
 }
