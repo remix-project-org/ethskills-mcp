@@ -110,6 +110,12 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
     url: "https://github.com/smartcontractkit/chainlink-agent-skills",
     branch: "main",
     name: "Chainlink skills"
+  },
+  {
+    url: "https://github.com/circlefin/skills",
+    branch: "master",
+    name: "Circle skills",
+    skillsPath: "plugins/circle/skills"
   }
   // Add more GitHub repositories here
   // Example:
