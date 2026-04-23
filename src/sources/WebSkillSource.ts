@@ -37,7 +37,6 @@ export class WebSkillSource implements SkillSource {
       }
       const content = await response.text();
       this.skillCache.set(skillId, content);
-      console.log(`[${skillId}] loaded from web (${content.length} bytes) from ${url}`);
       return content;
     } catch (err) {
       console.warn(`[${skillId}] web fetch failed: ${(err as Error).message}`);

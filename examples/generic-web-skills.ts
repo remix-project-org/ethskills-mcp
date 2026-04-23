@@ -88,19 +88,19 @@ async function demonstrateUsage() {
   try {
     // Load from EthSkills
     const shipContent = await ethSkillsSource.loadSkill('ship');
-    console.log('Loaded ship skill:', shipContent?.substring(0, 100) + '...');
+    console.log('Loaded ship skill')
 
     // Load from direct URL
     const installContent = await docsSource.loadSkill('installation');
-    console.log('Loaded installation docs:', installContent?.substring(0, 100) + '...');
+    console.log('Loaded installation docs')
 
     // Load from GitHub
     const apiContent = await githubSource.loadSkill('api-reference');
-    console.log('Loaded API reference:', apiContent?.substring(0, 100) + '...');
+    console.log('Loaded API reference')
 
     // Load from custom API
     const userMgmtContent = await apiSource.loadSkill('user-management');
-    console.log('Loaded user management docs:', userMgmtContent?.substring(0, 100) + '...');
+    console.log('Loaded user management docs')
 
   } catch (error) {
     console.error('Error loading skills:', error);
