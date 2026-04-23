@@ -5,7 +5,6 @@ export class SkillManager {
 
   addSource(source: SkillSource): void {
     this.sources.push(source);
-    console.log(`Added skill source: ${source.getName()}`);
   }
 
   getAllSkills(): SkillMetadata[] {

@@ -35,10 +35,6 @@ async function initializeSkillSources(): Promise<void> {
       console.error(`Failed to initialize GitHub repo ${repoConfig.name}: ${(error as Error).message}`);
     }
   }
-
-  console.log("\n=== Skill Sources Summary ===");
-  skillManager.getSourcesInfo().forEach(info => console.log(info));
-  console.log("==============================\n");
 }
 
 function createMcpServer(): Server {
@@ -135,7 +131,6 @@ function createMcpServer(): Server {
           isError: true,
         };
       }
-      console.log(`Successfully loaded content for skill id: '${skill_id}'`, content);
       return {
         content: [{ type: "text" as const, text: content }],
       };
@@ -165,7 +160,6 @@ function createMcpServer(): Server {
           };
         }
         
-        console.log(`Successfully loaded resource: ${resource_path} for skill: ${skill_id}`);
         return {
           content: [{ type: "text" as const, text: resourceContent }],
         };
