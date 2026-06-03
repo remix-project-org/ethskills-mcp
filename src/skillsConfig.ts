@@ -116,6 +116,12 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
     branch: "master",
     name: "Circle skills",
     skillsPath: "plugins/circle/skills"
+  },
+  {
+    url: "https://github.com/FhenixProtocol/fhenix-toolkit",
+    branch: "main",
+    name: "fhenix skills toolkit",
+    skillsPath: "plugins/fhenix-toolkit/skills"
   }
   // Add more GitHub repositories here
   // Example:
