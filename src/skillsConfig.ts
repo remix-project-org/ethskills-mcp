@@ -122,6 +122,12 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
     branch: "main",
     name: "fhenix skills toolkit",
     skillsPath: "plugins/fhenix-toolkit/skills"
+  },
+  {
+    url: "https://github.com/thenamespace/skills",
+    branch: "main",
+    name: "ENS Skills",
+    skillsPath: "skills"
   }
   // Add more GitHub repositories here
   // Example:
