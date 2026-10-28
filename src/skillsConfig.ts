@@ -128,6 +128,12 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
     branch: "main",
     name: "ENS Skills",
     skillsPath: "skills"
+  },
+  {
+    url: "https://github.com/ethersphere/swarm-quickstart-skills",
+    branch: "main",
+    name: "Swarm Quickstart Skills",
+    skillsPath: ".claude/skills"
   }
   // Add more GitHub repositories here
   // Example:
