@@ -134,6 +134,11 @@ export const GITHUB_REPOS: GitHubRepoConfig[] = [
     branch: "main",
     name: "Swarm Quickstart Skills",
     skillsPath: ".claude/skills"
+  },
+  {
+    url: "https://github.com/pashov/skills",
+    branch: "main",
+    name: "Pashov Audit Group Skills"
   }
   // Add more GitHub repositories here
   // Example:
